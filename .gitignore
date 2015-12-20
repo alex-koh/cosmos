@@ -2,6 +2,7 @@
 
 ### Documentation ###
 **/*.pdf
+**/*.ps
 
 ### Linux ###
 *~
