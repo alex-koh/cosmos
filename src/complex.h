@@ -25,8 +25,9 @@ typedef struct {
     z.x *= t; \
     z.y *= t;
 
-#define complex_mult(z1, z2) \
-    z1.x = z1.x * z2.x - z1.y * z2.y ; \
-    z1.y = z1.x * z2.y - z1.y * z2.x ;
+#define complex_mult(z1, z2, t) \
+    t = z1.x * z2.x - z1.y * z2.y ; \
+    z1.y = z1.x * z2.y + z1.y * z2.x ; \
+    z1.x = s;
 
 #endif//__COSMOS_COMPLEX_H__

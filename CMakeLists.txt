@@ -36,12 +36,6 @@ add_dependencies(cosmos gravity_compiler)
 
 enable_testing ()
 
-add_executable (cosmos_test 
-	test/main.c
-	test/test_gravity.c
-)
-
-target_link_libraries (cosmos_test m cosmos)
-
-add_test (NAME gravity.potential.gem4
-	COMMAND cosmos_test potential ${resources}/gem4/gem4-9280.gdf)
+add_executable (potential44 test/potential44.c)
+target_link_libraries (potential44 m cosmos)
+add_test (NAME gravity.potential44 COMMAND potential44)

@@ -117,7 +117,7 @@ static int model_print(const model_t * model, FILE * out) {
             fprintf(out,"/*%7d %4d %4d */ %+.12e,\n", i++, 0, 0, 1.);
         } else {
             fprintf(out,"/*%7d %4d %4d */ %+.12e,\n", i++, m, m, 
-                    sqrt((m + 1.5) / m) / (2*m - 1));
+                    sqrt((m + .5) / m) / (2*m - 1));
         }
         for (n = m + 1; n <= model->max_degree; n++) {
             print_space(out);
