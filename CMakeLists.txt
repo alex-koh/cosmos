@@ -15,10 +15,10 @@ add_executable (gravity_compiler
 )
 target_link_libraries (gravity_compiler m)
 
-add_custom_command (OUTPUT ${generated}/gravity_data.c
-	COMMAND gravity_compiler ${generated}/gravity_data.c 
-		${resources}/gem4/gem4.gfc
-		DEPENDS gravity_compiler
+add_custom_command (
+	OUTPUT ${generated}/gravity_data.c
+	COMMAND gravity_compiler ${generated}/gravity_data.c ${resources}/gem4/gem4.gfc
+	DEPENDS gravity_compiler
 )
 
 # comile main library

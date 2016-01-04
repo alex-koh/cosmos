@@ -11,7 +11,7 @@ enum { BEGIN, HEADER, BODY_START, BODY, ERROR };
 #define print_space(out) fprintf(out, "    ");
 
 typedef struct {
-    char * modelname;
+    char modelname[BUFFER];
     int max_degree;
     float earth_gravity_constant;
     float radius;
@@ -26,7 +26,7 @@ int error(const char * msg, ...) {
     return ERROR;
 }
 
-const char * next_token(const char * line) {
+static const char * next_token(const char * line) {
     while (*line && isspace(*line)) line++; 
     while (*line && !isspace(*line)) line++; 
     return line;
@@ -91,12 +91,16 @@ static int body_add(model_t * model, const char * line) {
     return BODY;
 }
 
-static int model_print(const model_t * model, FILE * out) {
+static int model_print(const model_t * model, const char * filename) {
     fprintf (stderr, "model_print\n");
     int i, n, m;
 
+    fprintf (stderr, "open %s\n", filename);
+    FILE * out = fopen(filename, "w");
+    fprintf(out, "#include \"gravity.h\"\n\n");
+
     i = 0;
-    fprintf(out,"static const complex_t %s_CS[] = {\n", model->modelname);
+    fprintf(out,"static const complex_t gravity_%s_CS[] = {\n", model->modelname);
     for (m=0; m <= model->max_degree; m++) {
         fprintf(out,"\n");
         for (n=m; n <= model->max_degree; n++) {
@@ -109,7 +113,7 @@ static int model_print(const model_t * model, FILE * out) {
     fflush(out);
 
     i = 0;
-    fprintf(out,"static const double %s_K[] = {\n", model->modelname);
+    fprintf(out,"static const double gravity_%s_K[] = {\n", model->modelname);
     for (m = 0; m <= model->max_degree; m++) {
         fprintf(out,"\n");
         print_space(out);
@@ -128,27 +132,16 @@ static int model_print(const model_t * model, FILE * out) {
     fprintf(out,"};\n\n");
     fflush(out);
 
-    fprintf(out,"static const gravity_t MODEL_%s = {\n", model->modelname);
-    print_space(out); fprintf(out,"%d,\n", model->max_degree);
+    fprintf(out,"const gravity_t gravity = {\n");
+    print_space(out); fprintf(out,"%d,\n",    model->max_degree);
     print_space(out); fprintf(out,"%.12e,\n", model->radius);
     print_space(out); fprintf(out,"%.12e,\n", model->earth_gravity_constant);
-    print_space(out); fprintf(out,"%s_CS,\n", model->modelname);
-    print_space(out); fprintf(out,"%s_K\n", model->modelname);
+    print_space(out); fprintf(out,"gravity_%s_CS,\n", model->modelname);
+    print_space(out); fprintf(out,"gravity_%s_K\n",   model->modelname);
     fprintf(out,"};\n\n");
-    fflush(out);
+    fclose(out);
+    fprintf (stderr, "close %s\n", filename);
     return 0;
-}
-
-static int main_print(char ** names, int size, FILE * out) {
-    fprintf(out, "const gravity_t * gravity_get(const char * name) {\n");
-    int i;
-    for (i=0; i<size; i++) {
-        print_space(out);
-        fprintf(out, "if (strcmp(\"%s\", name) == 0) return &MODEL_%s;\n", names[i], names[i]);
-    }
-    print_space(out);
-    fprintf(out, "return NULL;\n");
-    fprintf(out, "}\n\n");
 }
 
 /**
@@ -172,33 +165,22 @@ static int handle(model_t * model, int state, char * line) {
 }
 
 int main(size_t argc, const char ** argv) {
-    if (argc < 3) return error("usage: %s <output.c> <resource> [<resource> ...]]\n", argv[0]);
-    fprintf (stderr, "open %s\n", argv[1]);
-    FILE * out = fopen(argv[1], "w");
-    fprintf(out, "#include \"gravity.h\"\n\n");
+    if (argc != 3) return error("usage: %s <output.c> <resource>\n", argv[0]);
     model_t model;
-    char names[BUFFER][argc-2];
-    char *pointers[argc-2];
     char buffer[BUFFER];
     int state = BEGIN;
-    int i;
-    for (i=2; i<argc; i++) {
-        pointers[i-2] = names[i-2];
-        fprintf (stderr, "open %s\n", argv[i]);
-        FILE * file = fopen (argv[i], "r");
-        model.modelname = names[i-2];
-        model.cs = NULL;
-        while ((NULL != fgets(buffer, BUFFER, file)) &&
-            ((state = handle (&model, state, buffer)) != ERROR)) {
-        }
-        if (state != ERROR) model_print(&model, out);
-        model_free(&model);
-        fclose(file);
-        fprintf (stderr, "close %s\n", argv[i]);
-        if (state == ERROR) return error("stop with error\n");
+    fprintf (stderr, "open %s\n", argv[2]);
+    FILE * file = fopen (argv[2], "r");
+    model.cs = NULL;
+    while ((NULL != fgets(buffer, BUFFER, file)) &&
+        ((state = handle (&model, state, buffer)) != ERROR)) {
     }
-    main_print(pointers, argc-2, out);
-    fclose(out);
-    fprintf (stderr, "close %s\n", argv[1]);
+    if (state != ERROR) 
+        return model_print (&model, argv[1]);
+    else 
+        return error ("stop with error\n");
+    model_free (&model);
+    fclose (file);
+    fprintf (stderr, "close %s\n", argv[2]);
     return 0;
 }

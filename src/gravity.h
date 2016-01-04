@@ -19,6 +19,6 @@ typedef struct {
 
 double potential(const gravity_t * gravity, double x, double y, double z);
 
-const gravity_t * gravity_get(const char * name);
+extern const gravity_t gravity;
 
 #endif//__COSMOS_GRAVITY_H__

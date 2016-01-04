@@ -64,15 +64,14 @@ int main(int argc, const char ** argv) {
     int res = 0;
     double epsilon = 1e-12;
 
-    const gravity_t * gem4 = gravity_get("GEM4");
     double k[15];
-    gravity_t gravity = {4, 1., 1., NULL, k};
-    int n, m, i=0, gem4_i;
+    gravity_t test_gravity = {4, 1., 1., NULL, k};
+    int n, m, i=0, gravity_i;
     for (m=0; m<=4; m++) {
-        gem4_i = (2*gem4->n + 3 - m)*m/2;
+        gravity_i = (2*gravity.n + 3 - m)*m/2;
         for (n=m; n <= 4; n++) {
-            fprintf(stderr, "i = %d gem4_i = %d\n", i, gem4_i);
-            k[i++] = gem4->k[gem4_i++];
+            fprintf(stderr, "i = %d gravity_i = %d\n", i, gravity_i);
+            k[i++] = gravity.k[gravity_i++];
         }
     }
     for (i=0; i<15; i++) fprintf(stderr, "%d %f\n", i, k[i]);
@@ -92,7 +91,7 @@ int main(int argc, const char ** argv) {
             i++;
         }
     }
-    for (i=0; i<size; i++) if (res = potential44(&gravity, angles[i].lmb, angles[i].phi, epsilon)) return res;
+    for (i=0; i<size; i++) if (res = potential44(&test_gravity, angles[i].lmb, angles[i].phi, epsilon)) return res;
 
     fprintf(stderr, "SUCCESS : potential44");
     return 0;
