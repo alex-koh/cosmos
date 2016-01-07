@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
@@ -10,12 +9,14 @@ enum { BEGIN, HEADER, BODY_START, BODY, ERROR };
 
 #define print_space(out) fprintf(out, "    ");
 
+typedef struct {double c,s;} complex_t;
+
 typedef struct {
     char modelname[BUFFER];
     int max_degree;
-    float earth_gravity_constant;
-    float radius;
-    struct {double c, s;} ** cs;
+    double earth_gravity_constant;
+    double radius;
+    complex_t ** cs;
 } model_t;
 
 int error(const char * msg, ...) {
@@ -34,14 +35,13 @@ static const char * next_token(const char * line) {
 
 static int header_set(model_t * model, const char * line) {
     if (!*line) return HEADER;
+    int r;
 
-#define set_field(field, len, func) \
+#define set_field(field, len, fmt) \
     if (strncmp(line, #field, len) == 0) { \
-        line = next_token(line); \
-        model->field = func(line); \
-        return model->field == 0.0 ? error("can not parse %s %s\n", #field, line) : HEADER;\
+        return sscanf(line + len, fmt, &model->field) ? HEADER : \
+            error("can not parse %s\n"); \
     }
-
 
     if (strncmp(line, "modelname", 9) == 0) {
         line = next_token(line);
@@ -54,9 +54,9 @@ static int header_set(model_t * model, const char * line) {
         return HEADER;
     }
 
-    set_field(radius, 6, atof)
-    set_field(max_degree, 10, atof)
-    set_field(earth_gravity_constant, 22, atof)
+    set_field(radius, 6, "%lf")
+    set_field(max_degree, 10, "%d")
+    set_field(earth_gravity_constant, 22, "%lf")
     fprintf(stderr, "can not find field %s \n", line);
     return HEADER;
 }
@@ -81,13 +81,15 @@ static void model_free(model_t * model) {
 }
 
 static int body_add(model_t * model, const char * line) {
-    int n = atoi(line = next_token(line));
-    if (n < 0 || model->max_degree < n) return error("wrong n %d %s\n", n, line);
-    int m = atoi(line = next_token(line));
-    if (m < 0 || model->max_degree < m) return error("wrong m %d %s\n", m, line);
-    if (model->cs[n][m].c != 0 || model->cs[n][m].s != 0) return error("already set %d %d\n", n, m);
-    model->cs[n][m].c = atof(line = next_token(line));
-    model->cs[n][m].s = atof(line = next_token(line));
+    int n,m;
+    complex_t cs;
+    if (sscanf (line, "%d %d %le %le", &n, &m, &cs.c, &cs.s) != 4) 
+        return error("can not parse %s\n", line);
+    if (m*m < 0 || model->max_degree < m || model->max_degree < n) 
+        return error("wrong n|m %d %s\n", m, line);
+    if (model->cs[n][m].c != 0 || model->cs[n][m].s != 0) 
+        return error("already set %d %d\n", n, m);
+    model->cs[n][m] = cs;
     return BODY;
 }
 
@@ -134,8 +136,8 @@ static int model_print(const model_t * model, const char * filename) {
 
     fprintf(out,"const gravity_t gravity = {\n");
     print_space(out); fprintf(out,"%d,\n",    model->max_degree);
-    print_space(out); fprintf(out,"%.12e,\n", model->radius);
-    print_space(out); fprintf(out,"%.12e,\n", model->earth_gravity_constant);
+    print_space(out); fprintf(out,"%.12le,\n", model->radius);
+    print_space(out); fprintf(out,"%.12le,\n", model->earth_gravity_constant);
     print_space(out); fprintf(out,"gravity_%s_CS,\n", model->modelname);
     print_space(out); fprintf(out,"gravity_%s_K\n",   model->modelname);
     fprintf(out,"};\n\n");
@@ -158,7 +160,7 @@ static int handle(model_t * model, int state, char * line) {
     case BODY_START:
         return strncmp(line, "end_of_head", 11) ? error("token \"end_of_head\" missed\n") : body_start(model);
     case BODY:
-        return strncmp(line, "gfc", 3) ? error("token \"gfc\" missed\n") : body_add(model, line);
+        return strncmp(line, "gfc", 3) ? error("token \"gfc\" missed\n") : body_add(model, line+3);
     default:
         return error("unknown error\n");
     }
