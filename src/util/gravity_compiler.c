@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <stdarg.h>
@@ -107,7 +108,7 @@ static int model_print(const model_t * model, const char * filename) {
         fprintf(out,"\n");
         for (n=m; n <= model->max_degree; n++) {
             print_space(out);
-            fprintf(out,"/*%7d %4d %4d */ {%+.12e, %+.12e},\n", i++, n, m, 
+            fprintf(out,"/*%7d %4d %4d */ {%+.16e, %+.16e},\n", i++, n, m, 
                     model->cs[n][m].c, model->cs[n][m].s);
         }
     }
@@ -120,14 +121,14 @@ static int model_print(const model_t * model, const char * filename) {
         fprintf(out,"\n");
         print_space(out);
         if (m==0) {
-            fprintf(out,"/*%7d %4d %4d */ %+.12e,\n", i++, 0, 0, 1.);
+            fprintf(out,"/*%7d %4d %4d */ %+.16e,\n", i++, 0, 0, 1.);
         } else {
-            fprintf(out,"/*%7d %4d %4d */ %+.12e,\n", i++, m, m, 
+            fprintf(out,"/*%7d %4d %4d */ %+.16e,\n", i++, m, m, 
                     sqrt((m + .5) / m) / (2*m - 1));
         }
         for (n = m + 1; n <= model->max_degree; n++) {
             print_space(out);
-            fprintf(out,"/*%7d %4d %4d */ %+.12e,\n", i++, n, m, 
+            fprintf(out,"/*%7d %4d %4d */ %+.16e,\n", i++, n, m, 
                     sqrt((2*n + 1.) * (n - m) / (2*n - 1.) / (n + m)));
         }
     }
@@ -136,8 +137,8 @@ static int model_print(const model_t * model, const char * filename) {
 
     fprintf(out,"const gravity_t gravity = {\n");
     print_space(out); fprintf(out,"%d,\n",    model->max_degree);
-    print_space(out); fprintf(out,"%.12le,\n", model->radius);
-    print_space(out); fprintf(out,"%.12le,\n", model->earth_gravity_constant);
+    print_space(out); fprintf(out,"%.16le,\n", model->radius);
+    print_space(out); fprintf(out,"%.16le,\n", model->earth_gravity_constant);
     print_space(out); fprintf(out,"gravity_%s_CS,\n", model->modelname);
     print_space(out); fprintf(out,"gravity_%s_K\n",   model->modelname);
     fprintf(out,"};\n\n");

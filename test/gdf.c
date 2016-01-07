@@ -28,7 +28,8 @@ static int header_set(geoid_t * geoid, const char * line) {
 
 #define set_field(field, field_name, len) \
     if (strncmp(line, #field_name, len) == 0) { \
-        return (geoid->field = atof(line+len)) == 0.0 ? error("can not parse %s\n", line) : HEADER; \
+        return (sscanf(line+len, "%le", &geoid->field)) ? HEADER : \
+            error("can not parse %s\n", line); \
     }
 
     set_field(f , flatrefpot, 10)
@@ -40,21 +41,18 @@ static int header_set(geoid_t * geoid, const char * line) {
 
 static int geoid_calc(geoid_t * geoid) {
     geoid->b2 = geoid->a2 * (1 - geoid->f);
-    fprintf(stderr, "calc geoid a = %.12e b = %.12e f = %.12e\n", geoid->a2, geoid->b2, geoid->f);
+    fprintf(stderr, "calc geoid a = %.16e b = %.16e f = %.16e\n", geoid->a2, geoid->b2, geoid->f);
     geoid->a2 *= geoid->a2;
     geoid->b2 *= geoid->b2;
     return BODY;
 }
 
 static int test_case_potential (const geoid_t * geoid, const char * line) {
-    while (*line && isspace(*line)) line++;
-    double lmb = atof(line);
-    while (*line && !isspace(*line)) line++;
-    while (*line && isspace(*line)) line++;
-    double phi = atof(line);
-    while (*line && !isspace(*line)) line++;
-    double expected = atof(line);
-
+    double lmb, phi, expected;
+    if (sscanf (line, "%le %le %le", &lmb, &phi, &expected) != 3) {
+        fprintf(stderr, "can not parse %s\n", line);
+        return ERROR;
+    }
     double cphi = cos(phi*M_PI/180.), sphi = sin(phi*M_PI/180.);
     double clmb = cos(lmb*M_PI/180.), slmb = sin(lmb*M_PI/180.);
 
@@ -65,10 +63,10 @@ static int test_case_potential (const geoid_t * geoid, const char * line) {
 
     double actual = potential(&gravity, x, y, z);
     double delta = 0;
-    if ((delta  = 2 * fabs((actual - expected) / (actual + expected))) > 1e-14) { // 1.6e-10
-        fprintf(stderr, " angles : %.12e, %.12e \n", lmb, phi);
-        fprintf(stderr, " r : %.12e, %.12e, %.12e \n", x, y, z);
-        fprintf(stderr, "delta = %+.12e actual = %+.12e expected = %+.12e\n", delta, actual, expected);
+    if ((delta  = fabs((actual - expected) / (actual + expected))) > 1e-14) { 
+        fprintf(stderr, " angles : %.16e, %.16e \n", lmb, phi);
+        fprintf(stderr, " r : %.16e, %.16e, %.16e \n", x, y, z);
+        fprintf(stderr, "delta = %+.16e actual = %+.16e expected = %+.16e\n", delta, actual, expected);
         return ERROR;
     }
     return BODY;
