@@ -27,9 +27,9 @@ static double column (const gravity_t * gravity,
     sum += complex_dot_real(v1, gravity->cs[i]);
     // \bar V_{m + k, m} (k >= 2)
     for (n = m + 2; n <= gravity->n; n++) {
-        i++;
-        complex_scale((*vp0), s,   - (n + m - 1.) / (n - m) * r0d2 * gravity->k[i - 1])
+        complex_scale((*vp0), s,   - (n + m - 1.) / (n - m) * r0d2 * gravity->k[i])
         complex_add((*vp0), (*vp1), s, (2*n - 1.) / (n - m) * context->zd * context->r0d)
+        i++;
         complex_scale((*vp0), s, gravity->k[i])
         sum += complex_dot_real((*vp0), gravity->cs[i]);
         // swap v0 and v1
@@ -64,5 +64,5 @@ double potential (const gravity_t * gravity,
     complex_scale (v, s, (2*gravity->n - 1) * context.r0d * gravity->k[i])
     sum += complex_dot_real(v, gravity->cs[i]);
 
-    return gravity->mu / rn * (sum0 + sqrt(2) * sum);
+    return gravity->mu / rn * (sum0 + M_SQRT2 * sum);
 }
