@@ -4,19 +4,18 @@
 
 static int potential44 (gravity_t * gravity, double lmb, double phi, double epsilon) {
     double rn = gravity->r0*1.16; // h ~ 1000 km
-    double x = rn * cos(phi) * cos(lmb), 
-           y = rn * cos(phi) * sin(lmb), 
-           z = rn * sin(phi);
+    double s = 0;
+    vector_t r = { cos(phi) * cos(lmb), cos(phi) * sin(lmb), sin(phi) };
+    vector_scale(r, s, rn)
     complex_t cs[15] = {};
     gravity->cs = cs;
     const complex_t ones = {1, 1};
-    double s = 0;
     double rd = gravity->r0/rn;
     double rr0[] = {1, rd, rd*rd, rd*rd*rd, rd*rd*rd*rd};
     double mu_d = gravity->mu / rn;
-    double zd = z / rn;
+    double zd = r.z / rn;
     double zz[] = {1, zd, zd*zd, zd*zd*zd, zd*zd*zd*zd};
-    complex_t r1d = {x/rn, y/rn};
+    complex_t r1d = {r.x/rn, r.y/rn};
     complex_t rr1[] = {{1,0}, r1d, r1d, r1d, r1d};
     complex_mult(rr1[2], rr1[1], s)
     complex_mult(rr1[3], rr1[2], s)
@@ -56,7 +55,7 @@ static int potential44 (gravity_t * gravity, double lmb, double phi, double epsi
     int i;
     for (i=0; i<15; i++) {
         complex_set(cs[i], ones)
-        actual = potential(gravity, x, y, z);
+        actual = potential(gravity, &r);
         if ((expected[i] > epsilon) &&  
             ((delta  = 2 * fabs((actual - expected[i]) / (actual + expected[i]))) > epsilon))
         {

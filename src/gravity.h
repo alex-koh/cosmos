@@ -2,10 +2,9 @@
 #define __COSMOS_GRAVITY_H__
 
 #include <stdint.h>
-#include <stdio.h>
-#include <math.h>
 
 #include "complex.h"
+#include "vector.h"
 
 typedef struct {
     uint16_t n;    // < 1e4
@@ -15,10 +14,8 @@ typedef struct {
     const double * k;
 } gravity_t;
 
-#define norm(x,y,z) sqrt(x*x + y*y + z*z)
-
-double potential(const gravity_t * gravity, double x, double y, double z);
-
 extern const gravity_t gravity;
+
+double potential(const gravity_t * gravity, const vector_t * r);
 
 #endif//__COSMOS_GRAVITY_H__

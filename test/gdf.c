@@ -48,7 +48,7 @@ static int geoid_calc(geoid_t * geoid) {
 }
 
 static int test_case_potential (const geoid_t * geoid, const char * line) {
-    double lmb, phi, expected;
+    double lmb, phi, expected, s;
     if (sscanf (line, "%le %le %le", &lmb, &phi, &expected) != 3) {
         fprintf(stderr, "can not parse %s\n", line);
         return ERROR;
@@ -57,15 +57,14 @@ static int test_case_potential (const geoid_t * geoid, const char * line) {
     double clmb = cos(lmb*M_PI/180.), slmb = sin(lmb*M_PI/180.);
 
     double alp = sqrt(geoid->a2*cphi*cphi + geoid->b2*sphi*sphi);
-    double x = geoid->a2 * clmb * cphi / alp;
-    double y = geoid->a2 * slmb * cphi / alp;
-    double z = geoid->b2 * sphi / alp;
+    vector_t r = { geoid->a2 * clmb * cphi, geoid->a2 * slmb * cphi, geoid->b2 * sphi };
+    vector_scale(r, s, 1. / alp)
 
-    double actual = potential(&gravity, x, y, z);
+    double actual = potential(&gravity, &r);
     double delta = 0;
     if ((delta  = fabs((actual - expected) / (actual + expected))) > 1e-14) { 
         fprintf(stderr, " angles : %.16e, %.16e \n", lmb, phi);
-        fprintf(stderr, " r : %.16e, %.16e, %.16e \n", x, y, z);
+        fprintf(stderr, " r : %.16e, %.16e, %.16e \n", r.x, r.y, r.z);
         fprintf(stderr, "delta = %+.16e actual = %+.16e expected = %+.16e\n", delta, actual, expected);
         return ERROR;
     }

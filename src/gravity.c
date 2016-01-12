@@ -4,6 +4,7 @@ typedef struct {
     complex_t r1d;
     double zd;
     double r0d;
+    double r0d2;
 } context_t;
 
 static double column (const gravity_t * gravity, 
@@ -12,7 +13,6 @@ static double column (const gravity_t * gravity,
                       uint32_t i,
                       complex_t v0)
 {
-    const double r0d2 = context->r0d * context->r0d;
     double s;
     // \bar V_{m, m}
     double sum = complex_dot_real(v0, gravity->cs[i]);
@@ -25,7 +25,7 @@ static double column (const gravity_t * gravity,
     sum += complex_dot_real(v1, gravity->cs[i]);
     // \bar V_{m + k, m} (k >= 2)
     for (n = m + 2; n <= gravity->n; n++) {
-        complex_scale((*vp0), s,   - (n + m - 1.) / (n - m) * r0d2 * gravity->k[i])
+        complex_scale((*vp0), s,   - (n + m - 1.) / (n - m) * context->r0d2 * gravity->k[i])
         complex_add((*vp0), (*vp1), s, (2*n - 1.) / (n - m) * context->zd * context->r0d)
         i++;
         complex_scale((*vp0), s, gravity->k[i])
@@ -36,14 +36,11 @@ static double column (const gravity_t * gravity,
     return sum;
 }
 
-double potential (const gravity_t * gravity, 
-                  double x, 
-                  double y, 
-                  double z)
-{
+double potential (const gravity_t * gravity, const vector_t * r) {
     double s;
-    const double rn = norm(x,y,z);
-    const context_t context = {{x / rn, y / rn}, z / rn, gravity->r0 / rn };
+    const double rn = vector_norm(*r);
+    const double r0d = gravity->r0 / rn;
+    const context_t context = {{r->x / rn, r->y / rn}, r->z / rn, r0d, r0d*r0d };
     uint32_t i=0;
     complex_t v  = {1, 0};
     complex_scale (v, s, gravity->k[i])
