@@ -1,7 +1,5 @@
 #include "gravity.h"
 
-#include <stdio.h>
-
 typedef struct {
     complex_t r1d;
     double zd;
@@ -63,6 +61,5 @@ double potential (const gravity_t * gravity,
     complex_mult (v, context.r1d, s)
     complex_scale (v, s, (2*gravity->n - 1) * context.r0d * gravity->k[i])
     sum += complex_dot_real(v, gravity->cs[i]);
-
     return gravity->mu / rn * (sum0 + M_SQRT2 * sum);
 }

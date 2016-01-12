@@ -100,8 +100,13 @@ static int model_print(const model_t * model, const char * filename) {
 
     fprintf (stderr, "open %s\n", filename);
     FILE * out = fopen(filename, "w");
+    if (out == NULL) {
+        fprintf (stderr, "can not open file %s\n", filename);
+        return 1;
+    }
     fprintf(out, "#include \"gravity.h\"\n\n");
 
+    fprintf (stderr, "print cs\n");
     i = 0;
     fprintf(out,"static const complex_t gravity_%s_CS[] = {\n", model->modelname);
     for (m=0; m <= model->max_degree; m++) {
@@ -115,6 +120,7 @@ static int model_print(const model_t * model, const char * filename) {
     fprintf(out,"};\n\n");
     fflush(out);
 
+    fprintf (stderr, "print K\n");
     i = 0;
     fprintf(out,"static const double gravity_%s_K[] = {\n", model->modelname);
     for (m = 0; m <= model->max_degree; m++) {
@@ -135,6 +141,7 @@ static int model_print(const model_t * model, const char * filename) {
     fprintf(out,"};\n\n");
     fflush(out);
 
+    fprintf (stderr, "print struct\n");
     fprintf(out,"const gravity_t gravity = {\n");
     print_space(out); fprintf(out,"%d,\n",    model->max_degree);
     print_space(out); fprintf(out,"%.16le,\n", model->radius);

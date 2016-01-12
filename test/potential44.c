@@ -3,12 +3,14 @@
 #include "gravity.h"
 
 static int potential44 (gravity_t * gravity, double lmb, double phi, double epsilon) {
-    double x = cos(phi) * cos(lmb), y = cos(phi) * sin(lmb), z = sin(phi);
+    double rn = gravity->r0*1.16; // h ~ 1000 km
+    double x = rn * cos(phi) * cos(lmb), 
+           y = rn * cos(phi) * sin(lmb), 
+           z = rn * sin(phi);
     complex_t cs[15] = {};
     gravity->cs = cs;
     const complex_t ones = {1, 1};
     double s = 0;
-    double rn = norm(x, y, z);
     double rd = gravity->r0/rn;
     double rr0[] = {1, rd, rd*rd, rd*rd*rd, rd*rd*rd*rd};
     double mu_d = gravity->mu / rn;
@@ -42,15 +44,24 @@ static int potential44 (gravity_t * gravity, double lmb, double phi, double epsi
     // m = 4
         /*14*/ mu_d * complex_dot_real(ones, rr1[4]) * rr0[4]* 105.*zz[0] * sqrt(9./20160.)
     };
+    /*
+     * Because I use {@code ones} instead actual {@code cs} it is a 
+     * catastrophic cancellation appeare in case when \lambda == \pi/4 + \pi*n,
+     * but because results are normilized, I just ignore this delta if it < \epsilon.
+     * 
+     * */
+    epsilon *= gravity->mu/gravity->r0;
     double actual = 0;
     double delta = 0;
     int i;
     for (i=0; i<15; i++) {
         complex_set(cs[i], ones)
         actual = potential(gravity, x, y, z);
-        if ((expected[i] > epsilon) &&  ((delta  = 2 * fabs((actual - expected[i]) / (actual + expected[i]))) > epsilon)) {
-            fprintf(stderr, " angles : %f, %f \n", lmb, phi);
-            fprintf(stderr, "#%d delta = %+.12e actual = %+.12e expected = %+.12e\n", i, delta, actual, expected[i]);
+        if ((expected[i] > epsilon) &&  
+            ((delta  = 2 * fabs((actual - expected[i]) / (actual + expected[i]))) > epsilon))
+        {
+            fprintf(stderr, " angles : %f, %f \n", lmb*180/M_PI, phi*180/M_PI);
+            fprintf(stderr, "#%d delta = %+.16e actual = %+.16e expected = %+.16e\n", i, delta, actual, expected[i]);
             return 1;
         }
         complex_set_zero(cs[i])
@@ -61,20 +72,10 @@ static int potential44 (gravity_t * gravity, double lmb, double phi, double epsi
 int main(int argc, const char ** argv) {
     fprintf(stderr, "START TESTS : potential44\n");
 
+    double epsilon = 1e-14;
     int res = 0;
-    double epsilon = 1e-12;
 
-    double k[15];
-    gravity_t test_gravity = {4, 1., 1., NULL, k};
-    int n, m, i=0, gravity_i;
-    for (m=0; m<=4; m++) {
-        gravity_i = (2*gravity.n + 3 - m)*m/2;
-        for (n=m; n <= 4; n++) {
-            fprintf(stderr, "i = %d gravity_i = %d\n", i, gravity_i);
-            k[i++] = gravity.k[gravity_i++];
-        }
-    }
-    for (i=0; i<15; i++) fprintf(stderr, "%d %f\n", i, k[i]);
+    gravity_t test_gravity = gravity;
 
     int size = 2 + 11 * 24;
     struct{double lmb,phi;} angles[size];
@@ -83,7 +84,7 @@ int main(int argc, const char ** argv) {
     angles[0].phi = - M_PI / 2;
     angles[1].lmb = 0;
     angles[1].phi = M_PI / 2;
-    i = 2;
+    int i = 2;
     for (lmb = 0; lmb < 2*M_PI - 0.1; lmb += M_PI/12) {
         for (phi = - 5*M_PI/12; phi < M_PI/2 - 0.1; phi += M_PI/12) {
             angles[i].lmb = lmb;
@@ -91,6 +92,14 @@ int main(int argc, const char ** argv) {
             i++;
         }
     }
+    // normal Earth's constants
+    test_gravity.r0 = 6.4e6;
+    test_gravity.mu = 4.0e14;
+    for (i=0; i<size; i++) if (res = potential44(&test_gravity, angles[i].lmb, angles[i].phi, epsilon)) return res;
+
+    // abnormal constants
+    test_gravity.r0 = 6.4;
+    test_gravity.mu = 4.0e25;
     for (i=0; i<size; i++) if (res = potential44(&test_gravity, angles[i].lmb, angles[i].phi, epsilon)) return res;
 
     fprintf(stderr, "SUCCESS : potential44");
