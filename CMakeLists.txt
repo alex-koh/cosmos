@@ -45,7 +45,7 @@ add_library (gravity src/gravity.c)
 enable_testing ()
 set(gravity.potential44 ON)
 set(gravity.gdf.gem4    ON)
-#set(gravity.gdf.egm96   ON)
+set(gravity.gdf.egm96   ON)
 
 make_directory (${generated}/test)
 make_directory (${generated}/test/resources)
