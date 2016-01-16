@@ -60,7 +60,7 @@ static int test_case_potential (const geoid_t * geoid, const char * line) {
     vector_t r = { geoid->a2 * clmb * cphi, geoid->a2 * slmb * cphi, geoid->b2 * sphi };
     vector_scale(r, s, 1. / alp)
 
-    double actual = potential(&gravity, &r);
+    double actual = potential(&r);
     double delta = 0;
     if ((delta  = fabs((actual - expected) / (actual + expected))) > 1e-14) { 
         fprintf(stderr, " angles : %.16e, %.16e \n", lmb, phi);

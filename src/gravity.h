@@ -16,6 +16,6 @@ typedef struct {
 
 extern const gravity_t gravity;
 
-double potential(const gravity_t * gravity, const vector_t * r);
+double potential(const vector_t * r);
 
 #endif//__COSMOS_GRAVITY_H__

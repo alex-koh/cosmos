@@ -2,10 +2,11 @@
 
 product_type                gravity_field
 modelname                   TEST_MODEL
-earth_gravity_constant      -1 (not used)
-radius                      -1 (not used)
-max_degree                   4 (used to generate K-valuse)
+earth_gravity_constant      ${earth_gravity_constant}
+radius                      ${radius}
+max_degree                  4
 
 
 key    L    M          C                   S
 end_of_head ==========================================
+gfc   ${n} ${m}  .60876142900872066 .79335334029123517
