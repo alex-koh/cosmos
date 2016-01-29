@@ -52,14 +52,19 @@ make_directory (${generated}/test/resources)
 
 if(gravity.potential44)
 	file(READ ${test}/resources/constants.txt gravity.constants)
-	foreach(c ${gravity.constants})
-		string(REPLACE "," ";" cc ${c})
-		list(GET cc 0 variant)
-		list(GET cc 1 earth_gravity_constant)
-		list(GET cc 2 radius)
-		foreach(m RANGE 0 4)
-			foreach (n RANGE ${m} 4)
+	foreach(m RANGE 0 4)
+		foreach (n RANGE ${m} 4)
+			set (precise ${generated}/test/potential44_${n}_${m}.c)
+			add_custom_command (
+				OUTPUT ${precise}
+				COMMAND python ${test}/python/potential44.py ${n} ${m} ${precise}
+				DEPENDS ${test}/python/potential44.py)
+			foreach(c ${gravity.constants})
 				set (test_model test_model_${variant}_${n}_${m})
+				string(REPLACE "," ";" cc ${c})
+				list(GET cc 0 variant)
+				list(GET cc 1 earth_gravity_constant)
+				list(GET cc 2 radius)
 				configure_file (${test}/resources/test_model.gfc
 					${generated}/test/resources/${test_model}.gfc)
 				add_custom_command (
@@ -71,16 +76,16 @@ if(gravity.potential44)
 						${generated}/test/resources/${test_model}.gfc
 						${test}/resources/test_model.gfc
 						${test}/resources/constants.txt)
-				add_library (${test_model} ${generated}/test/${test_model}.c)
+				add_library (${test_model} ${generated}/test/${test_model}.c ${precise})
 
 				set (potential44 potential44_${variant}_${n}_${m})
 				add_executable (${potential44} test/potential44.c)
 				target_link_libraries (${potential44} m gravity ${test_model})
 				add_test (NAME gravity.${potential44} 
 					COMMAND ${potential44} 1e-10 33 33)
-			endforeach(n)
-		endforeach(m)
-	endforeach(c)
+			endforeach(c)
+		endforeach(n)
+	endforeach(m)
 endif(gravity.potential44)
 
 if(gravity.gdf.gem4)
