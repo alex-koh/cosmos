@@ -141,13 +141,25 @@ static int model_print(const model_t * model, const char * filename) {
     fprintf(out,"};\n\n");
     fflush(out);
 
+    fprintf (stderr, "print power of 3\n");
+    fprintf (out, "static const uint32_t gravity_%s_pow3[] = {\n", model->modelname);
+    int p3 = 1;
+    for (i = 0; i < 17; i++) {
+        print_space(out);
+        fprintf(out, "/* %2d */ %d,\n", i, p3);
+        p3 *= 3;
+    }
+    fprintf(out,"};\n\n");
+    fflush(out);
+
     fprintf (stderr, "print struct\n");
     fprintf(out,"const gravity_t gravity = {\n");
     print_space(out); fprintf(out,"%d,\n",    model->max_degree);
     print_space(out); fprintf(out,"%.16le,\n", model->radius);
     print_space(out); fprintf(out,"%.16le,\n", model->earth_gravity_constant);
     print_space(out); fprintf(out,"gravity_%s_CS,\n", model->modelname);
-    print_space(out); fprintf(out,"gravity_%s_K\n",   model->modelname);
+    print_space(out); fprintf(out,"gravity_%s_K,\n",   model->modelname);
+    print_space(out); fprintf(out,"gravity_%s_pow3\n",   model->modelname);
     fprintf(out,"};\n\n");
     fclose(out);
     fprintf (stderr, "close %s\n", filename);

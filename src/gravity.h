@@ -12,6 +12,7 @@ typedef struct {
     double mu;
     const complex_t * cs;
     const double * k;
+    const uint32_t * pow3;
 } gravity_t;
 
 extern const gravity_t gravity;

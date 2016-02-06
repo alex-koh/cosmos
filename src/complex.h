@@ -7,27 +7,26 @@ typedef struct {
 
 #define complex_dot_real(z1, z2) (z1.x * z2.x + z1.y * z2.y)
 
-#define complex_set_zero(z1) \
-    z1.x = 0.; \
-    z1.y = 0.;
+#define complex_add(r, a, z, b, s) \
+    s = a; \
+    r.x *= s; \
+    r.y *= s; \
+    s = b; \
+    r.x += s * z.x; \
+    r.y += s * z.y; 
 
-#define complex_set(z1, z2) \
-    z1.x = z2.x; \
-    z1.y = z2.y;
+#define complex_scale(r, exp, s) \
+    s = exp; \
+    r.x *= s; \
+    r.y *= s;
 
-#define complex_add(z1, z2, t, exp) \
-    t = exp; \
-    z1.x += t * z2.x; \
-    z1.y += t * z2.y; 
+#define complex_scale_r(r, z, exp, s) \
+    s = exp; \
+    r.x = s * z.x; \
+    r.y = s * z.y;
 
-#define complex_scale(z, t, exp) \
-    t = exp; \
-    z.x *= t; \
-    z.y *= t;
-
-#define complex_mult(z1, z2, t) \
-    t = z1.x * z2.x - z1.y * z2.y ; \
-    z1.y = z1.x * z2.y + z1.y * z2.x ; \
-    z1.x = s;
+#define complex_mult_r(r, z1, z2) \
+    r.x = z1.x * z2.x - z1.y * z2.y ; \
+    r.y = z1.x * z2.y + z1.y * z2.x ; 
 
 #endif//__COSMOS_COMPLEX_H__
